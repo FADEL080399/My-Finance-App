@@ -106,9 +106,12 @@ main[data-pg=set] .topbar{display:none}.prof{text-align:center;padding:4px 0 26p
 .ri{width:24px;height:24px;display:flex;flex:none}.ri svg{width:22px;height:22px}.rt{flex:1;min-width:0}.rt .k{font-size:13px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rw>svg{width:18px;height:18px;color:var(--mu);flex:none}
 .rw select{background:none;border:0;color:var(--mu);text-align:right;padding:0 22px 0 0;min-height:0;width:auto;box-shadow:none}
 .invb{display:flex;gap:12px;align-items:center;color:var(--act);text-decoration:none;margin-bottom:12px;padding:16px 20px}.invb svg{flex:none}
+#ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);width:46px;height:46px;margin-left:-23px;border-radius:50%;background:color-mix(in srgb,var(--mu) 45%,transparent);display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(.6);pointer-events:none;z-index:25}
+#ptr svg{width:26px;height:26px;fill:var(--tx)}#ptr.spin svg{animation:ptrs .8s linear infinite}@keyframes ptrs{to{transform:rotate(360deg)}}
+#main{will-change:transform}
 </style></head><body>
 <svg id="lgdefs" width="0" height="0" style="position:absolute" aria-hidden="true"></svg><div id="app"><nav id="nav"></nav><main id="main"><div class="ld">Memuat data…</div></main></div>
-<div id="toast"></div><div id="mod"></div>
+<div id="ptr" aria-hidden="true"><svg viewBox="0 0 26 26"><circle cx="13" cy="5" r="2.7"/><circle cx="21" cy="13" r="2.7"/><circle cx="13" cy="21" r="2.7"/><circle cx="5" cy="13" r="2.7"/></svg></div><div id="toast"></div><div id="mod"></div>
 <script>
 const SB=window.SB_CONFIG||{url:"",key:""};
 const INC=["Gaji","Bonus","Bisnis/Usaha","Investasi","Hadiah","Freelance","Pendapatan lainnya"],
@@ -307,7 +310,7 @@ addEventListener("resize",()=>{clearTimeout(window._lgt);window._lgt=setTimeout(
 const HH={id:null,name:"",owner:"",members:[],invites:[],incoming:[],ok:false,t:0};
 const MAILP='<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',USERP='<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',USERSP='<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5M17 4.5a3.5 3.5 0 0 1 0 7M22 20c0-2.5-1.5-4-4-5"/>',PLUSP='<path d="M12 5v14M5 12h14"/>',EXITP='<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>';
 const hsig=o=>(o.tx||[]).map(x=>x.id+":"+(x.u||0)).sort().join()+"|"+Object.keys(o.del||{}).sort().join()+"|"+(o.cu||0);
-function startSync(){if(window._ss)return;window._ss=1;addEventListener("focus",()=>{sync();hhLoad()});document.addEventListener("visibilitychange",()=>{if(!document.hidden){sync();hhLoad()}});setInterval(()=>sync(),30000)}
+function startSync(){if(window._ss)return;window._ss=1;addEventListener("focus",()=>{sync();hhLoad()});document.addEventListener("visibilitychange",()=>{if(!document.hidden){sync();hhLoad()}});setInterval(()=>sync(),15000)}
 async function hhLoad(){if(!cl||!user)return;
  try{const m=await cl.from("household_members").select("household_id").eq("user_id",user.id).maybeSingle();if(m.error)throw m.error;
   const inc=await cl.from("household_invites").select("household_id,household_name").eq("email",(user.email||"").toLowerCase());
@@ -343,6 +346,18 @@ function hhRemoveUI(i){const m=HH.members[i];if(!m)return;modal(`<h2>Keluarkan a
 async function hhRemove(i){const m=HH.members[i];if(!m)return;const r=await cl.from("household_members").delete().eq("household_id",HH.id).eq("user_id",m.user_id);closeM();if(r.error)return toast(r.error.message);await hhLoad();toast("Anggota dikeluarkan")}
 function hhLeaveUI(){const own=HH.owner==user.id;modal(`<h2>${own?"Bubarkan grup?":"Keluar dari grup?"}</h2><div class="k">${own?"Semua anggota akan dikeluarkan dan data grup di server dihapus.":"Kamu tidak akan lagi melihat atau mengubah catatan grup."} Catatan di perangkat ini tetap ada.</div><div class="row" style="margin:14px 0 0;justify-content:flex-end"><button onclick="closeM()">Batal</button><button class="p" onclick="hhLeave()">${own?"Bubarkan":"Keluar"}</button></div>`)}
 async function hhLeave(){const own=HH.owner==user.id;const r=own?await cl.from("households").delete().eq("id",HH.id):await cl.from("household_members").delete().eq("household_id",HH.id).eq("user_id",user.id);closeM();if(r.error)return toast(r.error.message);HH.id=null;await hhLoad();toast(own?"Grup dibubarkan":"Kamu keluar dari grup")}
+const PT={y:0,x:0,dy:0,on:false,dir:0,busy:false};
+async function refreshNow(){if(!cl||!user){render();return true}let n=0;while(syncing&&n++<60)await new Promise(r=>setTimeout(r,100));await hhLoad();await sync();render();return !/Offline/.test(syncMsg)}
+function ptrSet(dy){const m=$("#main"),p=$("#ptr"),k=Math.min(dy/60,1);m.style.transition="none";m.style.transform=dy?`translateY(${dy}px)`:"";p.style.opacity=k;p.style.transform=`scale(${.6+.4*k})`;p.firstElementChild.style.transform=`rotate(${dy*4}deg)`}
+function ptrReset(){const m=$("#main"),p=$("#ptr");PT.dy=0;m.style.transition="transform .32s cubic-bezier(.2,.8,.2,1)";m.style.transform="";p.style.opacity=0;p.style.transform="scale(.6)";p.firstElementChild.style.transform="";setTimeout(()=>{m.style.transition=""},340)}
+async function ptrRun(){PT.busy=true;const p=$("#ptr"),m=$("#main");m.style.transition="transform .32s cubic-bezier(.2,.8,.2,1)";m.style.transform="translateY(56px)";p.style.opacity=1;p.style.transform="scale(1)";p.firstElementChild.style.transform="";p.classList.add("spin");
+ const t0=Date.now();let ok=true;try{ok=await refreshNow()}catch(e){ok=false}
+ const w=800-(Date.now()-t0);if(w>0)await new Promise(r=>setTimeout(r,w));p.classList.remove("spin");PT.busy=false;ptrReset();if(!ok)toast("Gagal menyegarkan, cek koneksi")}
+addEventListener("touchstart",e=>{if(PT.busy||document.querySelector(".ov")||scrollY>0||e.touches.length!=1){PT.on=false;return}PT.y=e.touches[0].clientY;PT.x=e.touches[0].clientX;PT.dy=0;PT.dir=0;PT.on=true},{passive:true});
+addEventListener("touchmove",e=>{if(!PT.on)return;const t=e.touches[0],dy=t.clientY-PT.y,dx=t.clientX-PT.x;if(!PT.dir){if(Math.abs(dx)+Math.abs(dy)<8)return;PT.dir=Math.abs(dy)>Math.abs(dx)&&dy>0&&scrollY<=0?1:-1}
+ if(PT.dir<0){PT.on=false;return}if(e.cancelable)e.preventDefault();PT.dy=Math.max(0,Math.min(dy*.5,96));ptrSet(PT.dy)},{passive:false});
+addEventListener("touchend",()=>{if(!PT.on)return;PT.on=false;if(PT.dir!=1)return;PT.dy>=58?ptrRun():ptrReset()},{passive:true});
+addEventListener("touchcancel",()=>{if(PT.on){PT.on=false;if(PT.dir==1)ptrReset()}},{passive:true});
 const CHEV=ic('<path d="M9 6l6 6-6 6"/>');
 function rw(icon,t,sub,on,extra){return`<div class="rw"${on?` onclick="${on}"`:""}><span class="ri">${icon}</span><div class="rt"><div>${t}</div>${sub?`<div class="k">${sub}</div>`:""}</div>${extra||CHEV}</div>`}
 function renameU(){modal(`<h2>Nama pengguna</h2><input id="un" value="${esc(S.set.name)}" maxlength="40"><div class="row" style="margin:14px 0 0;justify-content:flex-end"><button onclick="closeM()">Batal</button><button class="p" onclick="saveName()">Simpan</button></div>`)}
