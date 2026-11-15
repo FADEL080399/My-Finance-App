@@ -31,8 +31,15 @@ button{cursor:pointer}button.p{background:var(--ac);color:var(--on);border-color
 .ov{position:fixed;inset:0;background:#0007;display:flex;align-items:center;justify-content:center;z-index:20;padding:12px}
 .md{background:var(--card);border-radius:16px;padding:18px;width:100%;max-width:420px;max-height:90vh;overflow:auto}
 .md label{display:block;margin:9px 0 3px;color:var(--mu);font-size:12px}.md input,.md select,.md textarea{width:100%}
-.receipt-preview{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}.receipt-preview img{width:112px;height:112px;object-fit:cover;border-radius:12px;border:1px solid var(--gbd)}.tx-actions{position:sticky;bottom:72px;z-index:2;padding:12px 0 8px;background:linear-gradient(180deg,transparent,var(--card) 22%);margin-top:14px!important}
-@media(max-width:760px){.tx-actions{bottom:74px;padding-bottom:12px}}
+.receipt-preview{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;padding:10px 12px;border:1px solid var(--bd);border-radius:12px;min-height:48px}
+.receipt-preview img{width:112px;height:112px;object-fit:cover;border-radius:10px;border:1px solid var(--gbd)}
+.md input[type=file]{padding:10px;background:var(--bg);border:1px solid var(--bd);border-radius:10px}
+.md input[type=file]::file-selector-button{margin-right:10px;padding:8px 12px;border:0;border-radius:8px;background:var(--ac2);color:var(--tx);font:inherit;cursor:pointer}
+.tx-actions{position:static;display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 0!important;padding:0 0 4px;background:none;z-index:auto}
+.tx-actions button{min-width:84px}
+
+/* APK: tombol tetap mengikuti alur form, tanpa offset khusus badge hosting */
+.md{padding-bottom:22px}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:112px;background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:30;display:none;max-width:90%}
 .fab{position:fixed;right:18px;bottom:110px;width:52px;height:52px;border-radius:50%;font-size:26px;padding:0;z-index:10;box-shadow:0 4px 14px #0004}
 .ld{padding:40px;text-align:center;color:var(--mu)}
